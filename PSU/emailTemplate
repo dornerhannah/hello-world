@@ -1,0 +1,44 @@
+# Define variables for email settings
+$EmailServer = "smtp.example.com"
+$EmailFrom = "sender@example.com"
+$EmailTo = "recipient@example.com"
+$EmailSubject = "Email Template Example"
+$TemplatePath = "C:\templates\email_template.html" # Path to your HTML template file
+$Username = "your_username" # Optional: If your SMTP server requires authentication
+$Password = "your_password" # Optional: If your SMTP server requires authentication
+
+# Read the content of the HTML template
+try {
+    $EmailBody = Get-Content $TemplatePath -Raw
+} catch {
+    Write-Error "Failed to read template file: $($_.Exception.Message)"
+    exit 1
+}
+
+# Replace placeholders in the template with actual values (if needed)
+$EmailBody = $EmailBody.Replace("{{UserName}}", "John Doe")
+$EmailBody = $EmailBody.Replace("{{OrderNumber}}", "12345")
+# Add more replacements as needed
+
+# Create the email message object
+$EmailMessage = @{
+    To = $EmailTo
+    From = $EmailFrom
+    Subject = $EmailSubject
+    Body = $EmailBody
+    SmtpServer = $EmailServer
+    BodyAsHtml = $true
+}
+
+#Add credentials if needed
+if ($Username -and $Password) {
+    $EmailMessage.Credential = New-Object System.Management.Automation.PSCredential ($Username, (ConvertTo-SecureString $Password -AsPlainText -Force))
+}
+
+# Send the email
+try {
+    Send-MailMessage @EmailMessage
+    Write-Host "Email sent successfully!"
+} catch {
+    Write-Error "Failed to send email: $($_.Exception.Message)"
+}
